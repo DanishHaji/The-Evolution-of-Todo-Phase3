@@ -1,0 +1,323 @@
+openapi: 3.1.0
+info:
+  title: Phase 3 AI Todo Chatbot API
+  description: |
+    RESTful API for AI-powered todo management via natural language.
+
+    ## Authentication
+    All endpoints (except /health) require JWT Bearer token:
+    ```
+    Authorization: Bearer <token>
+    ```
+
+    ## User Isolation
+    All operations scoped to authenticated user_id from JWT.
+
+    ## Error Handling
+    - 200: Success with data
+    - 400: Bad request (validation errors)
+    - 401: Unauthorized (invalid/missing JWT)
+    - 403: Forbidden (user_id mismatch)
+    - 404: Resource not found
+    - 500: Internal server error
+  version: 1.0.0
+  contact:
+    name: Phase 3 Development Team
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.production.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns server health status and database connectivity
+      operationId: healthCheck
+      tags:
+        - System
+      security: []  # No authentication required
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded]
+                    example: healthy
+                  database:
+                    type: string
+                    enum: [connected, disconnected]
+                    example: connected
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: '2026-01-16T10:00:00Z'
+        '500':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/{user_id}/chat:
+    post:
+      summary: Process natural language chat query
+      description: |
+        Send a natural language query to the AI chatbot for task management.
+
+        The bot will:
+        - Parse the query intent
+        - Call appropriate MCP tools (add_task, list_tasks, etc.)
+        - Persist the conversation exchange
+        - Return a user-friendly response
+
+        ## Examples
+        - "Add task to buy groceries tomorrow"
+        - "Show my high priority tasks"
+        - "Delete task 123"
+        - "Mark all overdue tasks as complete"
+      operationId: processChat
+      tags:
+        - Chat
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: User ID (must match authenticated user from JWT)
+          schema:
+            type: integer
+            example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  minLength: 1
+                  maxLength: 1000
+                  description: Natural language query
+                  example: "Add task to buy groceries tomorrow at 6 PM"
+                conversation_id:
+                  type: integer
+                  nullable: true
+                  description: Optional conversation ID to continue existing conversation
+                  example: 1
+            examples:
+              add_task:
+                summary: Add new task
+                value:
+                  query: "Add task to buy groceries tomorrow"
+              list_tasks:
+                summary: List tasks
+                value:
+                  query: "Show my high priority tasks due this week"
+              delete_task:
+                summary: Delete task
+                value:
+                  query: "Delete task 123"
+                  conversation_id: 5
+      responses:
+        '200':
+          description: Chat processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Invalid request (validation errors, ambiguous query)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                validation_error:
+                  summary: Validation error
+                  value:
+                    error: "Validation error"
+                    detail: "query must be at least 1 character"
+                ambiguous_query:
+                  summary: Ambiguous query
+                  value:
+                    error: "Ambiguous request"
+                    detail: "Which task do you want to delete? Please provide task ID or title."
+        '401':
+          description: Unauthorized (missing or invalid JWT)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (user_id mismatch)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Forbidden"
+                detail: "User ID in path does not match authenticated user"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from Better Auth login.
+
+        Token contains:
+        - sub: user_id
+        - exp: expiration timestamp (7 days from issue)
+        - iat: issued at timestamp
+
+  schemas:
+    ChatResponse:
+      type: object
+      required:
+        - response
+        - conversation_id
+      properties:
+        response:
+          type: string
+          description: User-friendly response from AI agent
+          example: "I've added 'Buy groceries' to your tasks, due tomorrow at 6:00 PM. Would you like to set a priority?"
+        conversation_id:
+          type: integer
+          description: Conversation ID for message history
+          example: 1
+        tasks:
+          type: array
+          description: Relevant tasks (e.g., newly created, matching filters)
+          items:
+            $ref: '#/components/schemas/Task'
+        metadata:
+          type: object
+          description: Additional metadata about the operation
+          properties:
+            tool_called:
+              type: string
+              example: "add_task"
+            execution_time:
+              type: number
+              format: float
+              example: 1.23
+              description: Execution time in seconds
+      example:
+        response: "I've added 'Buy groceries' to your tasks, due tomorrow at 6:00 PM."
+        conversation_id: 1
+        tasks:
+          - id: 123
+            title: "Buy groceries"
+            due_date: "2026-01-17T18:00:00Z"
+            priority: "medium"
+        metadata:
+          tool_called: "add_task"
+          execution_time: 1.23
+
+    Task:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          example: 123
+        user_id:
+          type: integer
+          example: 42
+        title:
+          type: string
+          maxLength: 255
+          example: "Buy groceries"
+        description:
+          type: string
+          example: "Milk, eggs, bread, and coffee"
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+          example: "high"
+        tags:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 10
+          example: ["shopping", "urgent"]
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2026-01-17T18:00:00Z"
+        status:
+          type: boolean
+          description: Completion status (false=incomplete, true=complete)
+          example: false
+        recurring:
+          type: string
+          nullable: true
+          enum: [daily, weekly, monthly, yearly]
+          example: null
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-01-16T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-01-16T10:00:00Z"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error type or message
+          example: "Validation error"
+        detail:
+          type: string
+          description: Detailed error explanation
+          example: "query must be at least 1 character"
+        field:
+          type: string
+          description: Field that caused the error (for validation errors)
+          example: "query"
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "VALIDATION_ERROR"
+
+tags:
+  - name: System
+    description: System health and status endpoints
+  - name: Chat
+    description: Natural language chat interface for task management
