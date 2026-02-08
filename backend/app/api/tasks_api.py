@@ -22,11 +22,11 @@ class TaskUpdate(BaseModel):
 
 
 class TaskResponse(BaseModel):
-    id: str
+    id: int
     title: str
     description: Optional[str]
     status: bool
-    user_id: str
+    user_id: int
     created_at: str
     updated_at: str
 
@@ -43,11 +43,11 @@ async def get_tasks(user_id: int = Depends(get_current_user_id)):
 
         return [
             TaskResponse(
-                id=str(task.id),
+                id=task.id,
                 title=task.title,
                 description=task.description,
                 status=task.status,
-                user_id=str(task.user_id),
+                user_id=task.user_id,
                 created_at=task.created_at.isoformat(),
                 updated_at=task.updated_at.isoformat()
             )
@@ -74,11 +74,11 @@ async def create_task(
         session.refresh(new_task)
 
         return TaskResponse(
-            id=str(new_task.id),
+            id=new_task.id,
             title=new_task.title,
             description=new_task.description,
             status=new_task.status,
-            user_id=str(new_task.user_id),
+            user_id=new_task.user_id,
             created_at=new_task.created_at.isoformat(),
             updated_at=new_task.updated_at.isoformat()
         )
@@ -114,11 +114,11 @@ async def update_task(
         session.refresh(task)
 
         return TaskResponse(
-            id=str(task.id),
+            id=task.id,
             title=task.title,
             description=task.description,
             status=task.status,
-            user_id=str(task.user_id),
+            user_id=task.user_id,
             created_at=task.created_at.isoformat(),
             updated_at=task.updated_at.isoformat()
         )

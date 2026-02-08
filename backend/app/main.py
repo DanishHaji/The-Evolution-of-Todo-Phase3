@@ -39,6 +39,7 @@ app.add_middleware(
         "http://localhost:3002",  # Alternative port 2
         "http://localhost:3003",  # Alternative port 3
         "https://the-evolution-of-todo-phase3.vercel.app",  # Production frontend
+        "https://the-evolution-of-todo-phase3-on990kg9q.vercel.app",  # Production frontend (deployed URL)
     ],
     allow_credentials=True,
     allow_methods=["*"],
