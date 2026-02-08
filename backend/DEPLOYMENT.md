@@ -48,13 +48,13 @@ https://vercel.com/dashboard
 
 Add these:
 ```
-DATABASE_URL=postgresql://neondb_owner:npg_GY2qWnTC8LZs@ep-icy-grass-a1xwtkeh-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=Your_URL
 
-JWT_SECRET=03c35c2b642050264b16b06f0d8c11629b62a1157b8497099e3745dc2a19d36b
+JWT_SECRET=Your_JWT_Secret
 
-BETTER_AUTH_SECRET=e6213e03da0dba5946c654a1e5d94fd919a5f748b07dbbcb332bc455fade9f54
+BETTER_AUTH_SECRET=Your_Auth_Secret
 
-COHERE_API_KEY=7fAl0Z1NA6vscDYtQ8K6CWlxq5U0PTxhlhZ4VvFZ
+COHERE_API_KEY=Your_Cohere_API
 
 ENV=production
 
@@ -90,10 +90,10 @@ Go to: https://render.com and sign up
 ### Step 3: Add Environment Variables
 In Render dashboard, add:
 ```
-DATABASE_URL=postgresql://neondb_owner:npg_GY2qWnTC8LZs@ep-icy-grass-a1xwtkeh-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-JWT_SECRET=03c35c2b642050264b16b06f0d8c11629b62a1157b8497099e3745dc2a19d36b
-BETTER_AUTH_SECRET=e6213e03da0dba5946c654a1e5d94fd919a5f748b07dbbcb332bc455fade9f54
-COHERE_API_KEY=7fAl0Z1NA6vscDYtQ8K6CWlxq5U0PTxhlhZ4VvFZ
+DATABASE_URL=Your_URL
+JWT_SECRET=Your_JWT_Secret
+BETTER_AUTH_SECRET=Your_Auth_Secret
+COHERE_API_KEY=Your_Cohere_API
 ENV=production
 DEBUG=false
 ```
@@ -123,9 +123,9 @@ railway up
 ### Step 3: Add Environment Variables
 ```bash
 railway variables set DATABASE_URL="postgresql://..."
-railway variables set JWT_SECRET="03c35c2b..."
-railway variables set BETTER_AUTH_SECRET="e6213e03..."
-railway variables set COHERE_API_KEY="7fAl0Z1NA6vscDYtQ8K6CWlxq5U0PTxhlhZ4VvFZ"
+railway variables set JWT_SECRET=".............."
+railway variables set BETTER_AUTH_SECRET="............3..."
+railway variables set COHERE_API_KEY="..........................."
 railway variables set ENV="production"
 railway variables set DEBUG="false"
 ```
