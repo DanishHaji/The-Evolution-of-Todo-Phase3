@@ -23,9 +23,14 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserResponse(BaseModel):
+    id: int
+    email: str
+
+
 class TokenResponse(BaseModel):
     token: str
-    user: dict
+    user: UserResponse
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -58,7 +63,7 @@ async def register(user_data: UserRegister):
 
         return TokenResponse(
             token=token,
-            user={"id": str(new_user.id), "email": new_user.email}
+            user=UserResponse(id=new_user.id, email=new_user.email)
         )
 
 
@@ -88,5 +93,5 @@ async def login(credentials: UserLogin):
 
         return TokenResponse(
             token=token,
-            user={"id": str(user.id), "email": user.email}
+            user=UserResponse(id=user.id, email=user.email)
         )

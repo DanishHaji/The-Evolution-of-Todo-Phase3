@@ -42,8 +42,10 @@ app.add_middleware(
         "https://the-evolution-of-todo-phase3-on990kg9q.vercel.app",  # Production frontend (deployed URL)
     ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
     allow_headers=["*"],
+    # Allow all headers including custom ones
+    expose_headers=["Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"],
 )
 
 # Include routers
